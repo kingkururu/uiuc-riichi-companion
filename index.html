@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Stats for the UIUC Riichi club's ranked games, plus a riichi mahjong score calculator." />
+    <title>UIUC Riichi Companion</title>
+    <script>
+      // Set the color theme before the page draws, so it doesn't flash the wrong colors.
+      // src/theme.ts handles changes after that.
+      (function () {
+        var choice = "auto";
+        try {
+          choice = localStorage.getItem("riichi-companion-theme") || "auto";
+        } catch (error) {}
+        var dark = choice === "dark" || (choice !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.dataset.theme = dark ? "dark" : "light";
+      })();
+    </script>
+    <script type="module" crossorigin src="./assets/index-Fkn8SAwb.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-C5LsJKCA.css">
+  </head>
+  <body>
+    <header class="page-header">
+      <div class="header-inner">
+        <div class="header-title">
+          <span class="header-tile" aria-hidden="true">中</span>
+          <div>
+            <h1>UIUC Riichi Companion</h1>
+            <p class="header-tagline">Club stats, a live score tracker, and your game log</p>
+          </div>
+          <label class="theme-picker">
+            <span class="visually-hidden">Color theme</span>
+            <select id="theme-select">
+              <option value="auto">Auto</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </label>
+        </div>
+        <nav class="tabs" role="tablist" aria-label="Sections">
+          <button type="button" role="tab" data-tab="club" aria-controls="club-panel">Club stats</button>
+          <button type="button" role="tab" data-tab="games" aria-controls="games-panel">My games</button>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <div id="club-panel" role="tabpanel" aria-label="Club stats"></div>
+
+      <div id="games-panel" role="tabpanel" aria-label="My games" hidden>
+        <nav class="target-buttons tool-nav" aria-label="My games">
+          <button type="button" class="target-button" data-games-view="live" aria-controls="live-panel">Live game</button>
+          <button type="button" class="target-button" data-games-view="log" aria-controls="log-panel">Logged games</button>
+          <button type="button" class="target-button" data-games-view="calculator" aria-controls="calculator-panel">Score calculator</button>
+        </nav>
+
+        <div id="live-panel"></div>
+
+        <div id="log-panel" hidden></div>
+
+        <div id="calculator-panel" hidden>
+          <nav class="target-buttons tool-nav" aria-label="Calculator tools">
+            <button type="button" class="target-button" data-tool="tiles" aria-controls="tiles-panel">From tiles</button>
+            <button type="button" class="target-button" data-tool="manual" aria-controls="manual-panel">From yaku</button>
+            <button type="button" class="target-button" data-tool="chart" aria-controls="chart-panel">Score chart</button>
+            <button type="button" class="target-button" data-tool="waits" aria-controls="waits-panel">Winning tiles</button>
+          </nav>
+
+          <div id="tiles-panel">
+            <p class="subtitle">Build your hand from tiles. The yaku and fu are worked out for you.</p>
+          </div>
+
+          <div id="manual-panel" hidden>
+            <p class="subtitle">Already know the yaku? Check them and pick the fu.</p>
+
+            <section class="card" aria-labelledby="win-heading">
+              <h2 id="win-heading">1. The win</h2>
+              <div class="choice-row">
+                <span class="choice-label">Winner</span>
+                <div class="segmented" role="radiogroup" aria-label="Winner">
+                  <label><input type="radio" name="seat" value="non-dealer" checked /> Non-dealer</label>
+                  <label><input type="radio" name="seat" value="dealer" /> Dealer</label>
+                </div>
+              </div>
+              <div class="choice-row">
+                <span class="choice-label">Won by</span>
+                <div class="segmented" role="radiogroup" aria-label="Won by">
+                  <label><input type="radio" name="win-type" value="ron" checked /> Ron (discard)</label>
+                  <label><input type="radio" name="win-type" value="tsumo" /> Tsumo (self-draw)</label>
+                </div>
+              </div>
+              <div class="choice-row">
+                <span class="choice-label">Hand</span>
+                <div class="segmented" role="radiogroup" aria-label="Hand">
+                  <label><input type="radio" name="hand" value="closed" checked /> Closed</label>
+                  <label><input type="radio" name="hand" value="open" /> Open (called chi/pon/kan)</label>
+                </div>
+              </div>
+            </section>
+
+            <section class="card" aria-labelledby="yaku-heading">
+              <h2 id="yaku-heading">2. Yaku</h2>
+              <p class="hint">Check every yaku in the hand. Greyed-out ones aren't possible with the choices above.</p>
+              <div id="yaku-groups"></div>
+            </section>
+
+            <section class="card" aria-labelledby="dora-heading">
+              <h2 id="dora-heading">3. Dora</h2>
+              <p class="hint">Each dora adds 1 han, but dora alone aren't a yaku.</p>
+              <div id="dora-counters" class="counters"></div>
+            </section>
+
+            <section class="card" aria-labelledby="fu-heading">
+              <h2 id="fu-heading">4. Fu</h2>
+              <label class="fu-row">
+                <span>Fu</span>
+                <select id="fu-select"></select>
+              </label>
+              <p id="fu-hint" class="hint"></p>
+            </section>
+
+            <section class="card" aria-labelledby="table-heading">
+              <h2 id="table-heading">5. On the table</h2>
+              <div id="table-counters" class="counters"></div>
+            </section>
+
+            <section class="card" aria-labelledby="breakdown-heading">
+              <h2 id="breakdown-heading">How it's scored</h2>
+              <div id="manual-breakdown"></div>
+              <button id="manual-reset" type="button" class="reset">Start a new hand</button>
+            </section>
+
+            <aside id="manual-result-bar" class="result-bar" aria-live="polite"></aside>
+          </div>
+
+          <div id="chart-panel" hidden></div>
+          <div id="waits-panel" hidden></div>
+        </div>
+      </div>
+    </main>
+
+  </body>
+</html>
