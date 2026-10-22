@@ -23,6 +23,32 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
+      # Says plainly what's wrong with the token (missing, mistyped, expired, or without access)
+      # instead of a bare "Bad credentials". Never prints the token itself.
+      - name: Check the token
+        env:
+          TOKEN: ${{ secrets.SOURCE_REPO_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::error::The SOURCE_REPO_TOKEN secret is empty."
+            exit 1
+          fi
+          case "$TOKEN" in
+            ghp_*|github_pat_*) ;;
+            *)
+              echo "::error::SOURCE_REPO_TOKEN doesn't look like a GitHub token: it should start with ghp_ or github_pat_ (it is ${#TOKEN} characters long)."
+              exit 1
+              ;;
+          esac
+          status=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $TOKEN" \
+            https://api.github.com/repos/cs124-illinois-students/Project-Fall2026-kingkururu-123271099)
+          case "$status" in
+            200) echo "The token can read the source repository." ;;
+            401) echo "::error::GitHub rejected the token: it's expired, revoked, or not copied completely. Make a new one."; exit 1 ;;
+            403|404) echo "::error::The token works but can't read the source repository: it needs 'repo' access, or the course organization has to allow it."; exit 1 ;;
+            *) echo "::error::Checking the token got HTTP $status."; exit 1 ;;
+          esac
+
       - name: Check out the published site
         uses: actions/checkout@v5
         with:
