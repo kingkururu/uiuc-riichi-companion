@@ -24,18 +24,18 @@ jobs:
     timeout-minutes: 45
     steps:
       - name: Check out the published site
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           path: site
 
       - name: Check out the app's source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: cs124-illinois-students/Project-Fall2026-kingkururu-123271099
           token: ${{ secrets.SOURCE_REPO_TOKEN }}
           path: source
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 20
           cache: npm
