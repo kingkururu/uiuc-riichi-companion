@@ -1,0 +1,72 @@
+# Runs in the public site repository (kingkururu/uiuc-riichi-companion). `npm run deploy` copies it
+# there from site-workflows/ in the app's source repository, which is the copy to edit.
+#
+# Every day: download the club's ranked games, rebuild the site, and publish it if anything changed.
+# Needs the secret SOURCE_REPO_TOKEN: a GitHub token that can read the private source repository.
+name: Refresh club data
+
+on:
+  schedule:
+    # 09:00 UTC = 4 AM in Champaign (CDT; 3 AM after daylight saving ends).
+    - cron: "0 9 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out the published site
+        uses: actions/checkout@v4
+        with:
+          path: site
+
+      - name: Check out the app's source
+        uses: actions/checkout@v4
+        with:
+          repository: cs124-illinois-students/Project-Fall2026-kingkururu-123271099
+          token: ${{ secrets.SOURCE_REPO_TOKEN }}
+          path: source
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: source/package-lock.json
+
+      - name: Install
+        working-directory: source
+        run: npm ci
+
+      - name: Download the club's games
+        working-directory: source
+        run: npm run import-club -- fa26 su26 sp26 fa25
+
+      - name: Build the site
+        working-directory: source
+        run: |
+          npx tsc
+          npx vite build --mode pages --outDir dist-pages
+          touch dist-pages/.nojekyll
+
+      - name: Publish if anything changed
+        run: |
+          find site -mindepth 1 -maxdepth 1 ! -name .git ! -name .github -exec rm -rf {} +
+          cp -R source/dist-pages/. site/
+          cd site
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No new club games; the site is already up to date."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Refresh club data $(date -u '+%Y-%m-%d')"
+          git push
