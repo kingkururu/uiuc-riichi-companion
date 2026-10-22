@@ -1,8 +1,9 @@
 # Runs in the public site repository (kingkururu/uiuc-riichi-companion). `npm run deploy` copies it
 # there from site-workflows/ in the app's source repository, which is the copy to edit.
 #
-# Every day: download the club's ranked games, rebuild the site, and publish it if anything changed.
-# Needs the secret SOURCE_REPO_TOKEN: a GitHub token that can read the private source repository.
+# Every day: download the current semester's ranked games from the club site with the bundled importer
+# (tools/import-club.mjs) and publish the new data file if anything changed. The site loads the data
+# files when it opens, so no rebuild (and no access to the private source) is needed.
 name: Refresh club data
 
 on:
@@ -18,81 +19,36 @@ concurrency:
   group: refresh
   cancel-in-progress: false
 
+env:
+  # The semester being played; change it (and deploy) when a new semester starts.
+  CURRENT_SEMESTER: fa26
+
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 30
     steps:
-      # Says plainly what's wrong with the token (missing, mistyped, expired, or without access)
-      # instead of a bare "Bad credentials". Never prints the token itself.
-      - name: Check the token
-        env:
-          TOKEN: ${{ secrets.SOURCE_REPO_TOKEN }}
-        run: |
-          if [ -z "$TOKEN" ]; then
-            echo "::error::The SOURCE_REPO_TOKEN secret is empty."
-            exit 1
-          fi
-          case "$TOKEN" in
-            ghp_*|github_pat_*) ;;
-            *)
-              echo "::error::SOURCE_REPO_TOKEN doesn't look like a GitHub token: it should start with ghp_ or github_pat_ (it is ${#TOKEN} characters long)."
-              exit 1
-              ;;
-          esac
-          status=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $TOKEN" \
-            https://api.github.com/repos/cs124-illinois-students/Project-Fall2026-kingkururu-123271099)
-          case "$status" in
-            200) echo "The token can read the source repository." ;;
-            401) echo "::error::GitHub rejected the token: it's expired, revoked, or not copied completely. Make a new one."; exit 1 ;;
-            403|404) echo "::error::The token works but can't read the source repository: it needs 'repo' access, or the course organization has to allow it."; exit 1 ;;
-            *) echo "::error::Checking the token got HTTP $status."; exit 1 ;;
-          esac
-
-      - name: Check out the published site
-        uses: actions/checkout@v5
-        with:
-          path: site
-
-      - name: Check out the app's source
-        uses: actions/checkout@v5
-        with:
-          repository: cs124-illinois-students/Project-Fall2026-kingkururu-123271099
-          token: ${{ secrets.SOURCE_REPO_TOKEN }}
-          path: source
+      - uses: actions/checkout@v5
 
       - uses: actions/setup-node@v5
         with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: source/package-lock.json
-
-      - name: Install
-        working-directory: source
-        run: npm ci
+          node-version: 22
 
       - name: Download the club's games
-        working-directory: source
-        run: npm run import-club -- fa26 su26 sp26 fa25
+        run: node tools/import-club.mjs "$CURRENT_SEMESTER"
 
-      - name: Build the site
-        working-directory: source
+      - name: Publish if there are new games
         run: |
-          npx tsc
-          npx vite build --mode pages --outDir dist-pages
-          touch dist-pages/.nojekyll
-
-      - name: Publish if anything changed
-        run: |
-          find site -mindepth 1 -maxdepth 1 ! -name .git ! -name .github -exec rm -rf {} +
-          cp -R source/dist-pages/. site/
-          cd site
-          git add -A
-          if git diff --cached --quiet; then
-            echo "No new club games; the site is already up to date."
+          # Every download has a new timestamp, so compare game counts instead of files.
+          count='const fs = require("fs"); try { console.log(JSON.parse(fs.readFileSync(0, "utf8")).games.length) } catch { console.log(-1) }'
+          before=$(git show "HEAD:club-data/$CURRENT_SEMESTER.json" 2>/dev/null | node -e "$count")
+          after=$(node -e "$count" < "club-data/$CURRENT_SEMESTER.json")
+          if [ "$before" = "$after" ]; then
+            echo "No new games ($after); the site is already up to date."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Refresh club data $(date -u '+%Y-%m-%d')"
+          git add club-data
+          git commit -m "Refresh $CURRENT_SEMESTER club data: $before → $after games"
           git push
