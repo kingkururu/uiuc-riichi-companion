@@ -17,8 +17,8 @@
         document.documentElement.dataset.theme = dark ? "dark" : "light";
       })();
     </script>
-    <script type="module" crossorigin src="./assets/index-B_UKfN75.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-CUZ9j9QO.css">
+    <script type="module" crossorigin src="./assets/index-CY1VbkS3.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-CKEiy11G.css">
   </head>
   <body>
     <header class="page-header">
@@ -27,32 +27,38 @@
           <span class="header-tile" aria-hidden="true">中</span>
           <div>
             <h1>UIUC Riichi Companion</h1>
-            <p class="header-tagline">Club stats, a live score tracker, and your game log</p>
+            <p class="header-tagline" data-i18n="Club stats, a live score tracker, and your game log">Club stats, a live score tracker, and your game log</p>
           </div>
-          <label class="theme-picker">
-            <span class="visually-hidden">Color theme</span>
-            <select id="theme-select">
-              <option value="auto">Auto</option>
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
-            </select>
-          </label>
+          <div class="header-pickers">
+            <label class="theme-picker">
+              <span class="visually-hidden" data-i18n="Language">Language</span>
+              <select id="language-select"></select>
+            </label>
+            <label class="theme-picker">
+              <span class="visually-hidden" data-i18n="Color theme">Color theme</span>
+              <select id="theme-select">
+                <option value="auto" data-i18n="Auto">Auto</option>
+                <option value="light" data-i18n="Light">Light</option>
+                <option value="dark" data-i18n="Dark">Dark</option>
+              </select>
+            </label>
+          </div>
         </div>
-        <nav class="tabs" role="tablist" aria-label="Sections">
-          <button type="button" role="tab" data-tab="club" aria-controls="club-panel">Club stats</button>
-          <button type="button" role="tab" data-tab="games" aria-controls="games-panel">My games</button>
+        <nav class="tabs" role="tablist" aria-label="Sections" data-i18n-label="Sections">
+          <button type="button" role="tab" data-tab="club" aria-controls="club-panel" data-i18n="Club stats">Club stats</button>
+          <button type="button" role="tab" data-tab="games" aria-controls="games-panel" data-i18n="My games">My games</button>
         </nav>
       </div>
     </header>
 
     <main>
-      <div id="club-panel" role="tabpanel" aria-label="Club stats"></div>
+      <div id="club-panel" role="tabpanel" aria-label="Club stats" data-i18n-label="Club stats"></div>
 
-      <div id="games-panel" role="tabpanel" aria-label="My games" hidden>
-        <nav class="target-buttons tool-nav" aria-label="My games">
-          <button type="button" class="target-button" data-games-view="live" aria-controls="live-panel">Live game</button>
-          <button type="button" class="target-button" data-games-view="log" aria-controls="log-panel">Logged games</button>
-          <button type="button" class="target-button" data-games-view="calculator" aria-controls="calculator-panel">Score calculator</button>
+      <div id="games-panel" role="tabpanel" aria-label="My games" data-i18n-label="My games" hidden>
+        <nav class="target-buttons tool-nav" aria-label="My games" data-i18n-label="My games">
+          <button type="button" class="target-button" data-games-view="live" aria-controls="live-panel" data-i18n="Live game">Live game</button>
+          <button type="button" class="target-button" data-games-view="log" aria-controls="log-panel" data-i18n="Logged games">Logged games</button>
+          <button type="button" class="target-button" data-games-view="calculator" aria-controls="calculator-panel" data-i18n="Score calculator">Score calculator</button>
         </nav>
 
         <div id="live-panel"></div>
@@ -60,12 +66,12 @@
         <div id="log-panel" hidden></div>
 
         <div id="calculator-panel" hidden>
-          <nav class="target-buttons tool-nav" aria-label="Calculator tools">
-            <button type="button" class="target-button" data-tool="tiles" aria-controls="tiles-panel">From tiles</button>
-            <button type="button" class="target-button" data-tool="manual" aria-controls="manual-panel">From yaku</button>
-            <button type="button" class="target-button" data-tool="chart" aria-controls="chart-panel">Score chart</button>
-            <button type="button" class="target-button" data-tool="waits" aria-controls="waits-panel">Winning tiles</button>
-            <button type="button" class="target-button" data-tool="yaku" aria-controls="yaku-panel">Yaku list</button>
+          <nav class="target-buttons tool-nav" aria-label="Calculator tools" data-i18n-label="Calculator tools">
+            <button type="button" class="target-button" data-tool="tiles" aria-controls="tiles-panel" data-i18n="From tiles">From tiles</button>
+            <button type="button" class="target-button" data-tool="manual" aria-controls="manual-panel" data-i18n="From yaku">From yaku</button>
+            <button type="button" class="target-button" data-tool="chart" aria-controls="chart-panel" data-i18n="Score chart">Score chart</button>
+            <button type="button" class="target-button" data-tool="waits" aria-controls="waits-panel" data-i18n="Winning tiles">Winning tiles</button>
+            <button type="button" class="target-button" data-tool="yaku" aria-controls="yaku-panel" data-i18n="Yaku list">Yaku list</button>
           </nav>
 
           <div id="tiles-panel">
