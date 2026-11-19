@@ -1,15 +1,17 @@
 # Runs in the public site repository (kingkururu/uiuc-riichi-companion). `npm run deploy` copies it
 # there from site-workflows/ in the app's source repository, which is the copy to edit.
 #
-# Every day: download the current semester's ranked games from the club site with the bundled importer
+# Every 6 hours: download the current semester's ranked games from the club site with the bundled importer
 # (tools/import-club.mjs) and publish the new data file if anything changed. The site loads the data
 # files when it opens, so no rebuild (and no access to the private source) is needed.
 name: Refresh club data
 
 on:
   schedule:
-    # 09:00 UTC = 4 AM in Champaign (CDT; 3 AM after daylight saving ends).
-    - cron: "0 9 * * *"
+    # Every 6 hours (03:17, 09:17, 15:17, 21:17 UTC). GitHub starts scheduled jobs late or skips
+    # them when it's busy (hours late in Nov 2026), so one run a day could leave games missing for a
+    # day or more. Off the hour because the top of the hour is GitHub's busiest time.
+    - cron: "17 */6 * * *"
   workflow_dispatch:
 
 permissions:
