@@ -1,7 +1,8 @@
 # Runs in the public site repository (kingkururu/uiuc-riichi-companion). `npm run deploy` copies it
 # there from site-workflows/ in the app's source repository, which is the copy to edit.
 #
-# Every 6 hours: download the current semester's ranked games from the club site with the bundled importer
+# Every 6 hours: download the current semester's ranked games (and once a day the older semesters, which
+# the club still edits, e.g. when it merges two accounts of one player) from the club site with the bundled importer
 # (tools/import-club.mjs) and publish the new data file if anything changed. The site loads the data
 # files when it opens, so no rebuild (and no access to the private source) is needed.
 name: Refresh club data
@@ -11,7 +12,9 @@ on:
     # Every 6 hours (03:17, 09:17, 15:17, 21:17 UTC). GitHub starts scheduled jobs late or skips
     # them when it's busy (hours late in Nov 2026), so one run a day could leave games missing for a
     # day or more. Off the hour because the top of the hour is GitHub's busiest time.
-    - cron: "17 */6 * * *"
+    - cron: "17 9,15,21 * * *"
+    # The 03:17 run also re-downloads OLDER_SEMESTERS.
+    - cron: "17 3 * * *"
   workflow_dispatch:
 
 permissions:
@@ -24,6 +27,8 @@ concurrency:
 env:
   # The semester being played; change it (and deploy) when a new semester starts.
   CURRENT_SEMESTER: fa26
+  # Earlier semesters still on the site; re-downloaded once a day and on a manual run.
+  OLDER_SEMESTERS: fa25 sp26 su26
 
 jobs:
   refresh:
@@ -37,20 +42,36 @@ jobs:
           node-version: 22
 
       - name: Download the club's games
-        run: node tools/import-club.mjs "$CURRENT_SEMESTER"
-
-      - name: Publish if there are new games
         run: |
-          # Every download has a new timestamp, so compare game counts instead of files.
-          count='const fs = require("fs"); try { console.log(JSON.parse(fs.readFileSync(0, "utf8")).games.length) } catch { console.log(-1) }'
-          before=$(git show "HEAD:club-data/$CURRENT_SEMESTER.json" 2>/dev/null | node -e "$count")
-          after=$(node -e "$count" < "club-data/$CURRENT_SEMESTER.json")
-          if [ "$before" = "$after" ]; then
-            echo "No new games ($after); the site is already up to date."
+          semesters="$CURRENT_SEMESTER"
+          if [ "${{ github.event.schedule }}" = "17 3 * * *" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            semesters="$CURRENT_SEMESTER $OLDER_SEMESTERS"
+          fi
+          node tools/import-club.mjs $semesters
+
+      - name: Publish if anything changed
+        run: |
+          # Every download has a new timestamp, so compare everything but the timestamp. Counting
+          # games isn't enough: when the club merges two accounts, the games stay and only the
+          # players change.
+          summary='const fs = require("fs"); try { const d = JSON.parse(fs.readFileSync(0, "utf8")); delete d.importedAt; console.log(require("crypto").createHash("sha1").update(JSON.stringify(d)).digest("hex") + " " + d.games.length) } catch { console.log("none -1") }'
+          changes=""
+          for file in club-data/*.json; do
+            semester=$(basename "$file" .json)
+            before=$(git show "HEAD:$file" 2>/dev/null | node -e "$summary")
+            after=$(node -e "$summary" < "$file")
+            if [ "${before% *}" = "${after% *}" ]; then
+              git checkout -- "$file" 2>/dev/null || true
+            else
+              changes="$changes $semester: ${before#* } → ${after#* } games;"
+            fi
+          done
+          if [ -z "$changes" ]; then
+            echo "Nothing changed; the site is already up to date."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
           git add club-data
-          git commit -m "Refresh $CURRENT_SEMESTER club data: $before → $after games"
+          git commit -m "Refresh club data:${changes%;}"
           git push
