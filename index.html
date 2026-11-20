@@ -17,8 +17,8 @@
         document.documentElement.dataset.theme = dark ? "dark" : "light";
       })();
     </script>
-    <script type="module" crossorigin src="./assets/index-FbNHpI_0.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-5GMeLj-H.css">
+    <script type="module" crossorigin src="./assets/index-Cy5RZuKa.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-swB6Tjf3.css">
   </head>
   <body>
     <header class="page-header">
@@ -59,6 +59,9 @@
           <button type="button" class="target-button" data-games-view="live" aria-controls="live-panel" data-i18n="Live game">Live game</button>
           <button type="button" class="target-button" data-games-view="log" aria-controls="log-panel" data-i18n="Logged games">Logged games</button>
           <button type="button" class="target-button" data-games-view="calculator" aria-controls="calculator-panel" data-i18n="Score calculator">Score calculator</button>
+          <button type="button" class="target-button" data-games-view="waits" aria-controls="waits-panel" data-i18n="Winning tiles">Winning tiles</button>
+          <button type="button" class="target-button" data-games-view="fuquiz" aria-controls="fuquiz-panel" data-i18n="Fu quiz">Fu quiz</button>
+          <button type="button" class="target-button" data-games-view="efficiency" aria-controls="efficiency-panel" data-i18n="Tile efficiency">Tile efficiency</button>
         </nav>
 
         <div id="live-panel"></div>
@@ -70,7 +73,6 @@
             <button type="button" class="target-button" data-tool="tiles" aria-controls="tiles-panel" data-i18n="From tiles">From tiles</button>
             <button type="button" class="target-button" data-tool="manual" aria-controls="manual-panel" data-i18n="From yaku">From yaku</button>
             <button type="button" class="target-button" data-tool="chart" aria-controls="chart-panel" data-i18n="Score chart">Score chart</button>
-            <button type="button" class="target-button" data-tool="waits" aria-controls="waits-panel" data-i18n="Winning tiles">Winning tiles</button>
             <button type="button" class="target-button" data-tool="yaku" aria-controls="yaku-panel" data-i18n="Yaku list">Yaku list</button>
           </nav>
 
@@ -142,9 +144,14 @@
           </div>
 
           <div id="chart-panel" hidden></div>
-          <div id="waits-panel" hidden></div>
           <div id="yaku-panel" hidden></div>
         </div>
+
+        <div id="waits-panel" hidden></div>
+
+        <div id="fuquiz-panel" hidden></div>
+
+        <div id="efficiency-panel" hidden></div>
       </div>
     </main>
     <footer class="site-footer"><p id="app-version"></p></footer>
