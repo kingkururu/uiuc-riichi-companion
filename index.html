@@ -17,8 +17,8 @@
         document.documentElement.dataset.theme = dark ? "dark" : "light";
       })();
     </script>
-    <script type="module" crossorigin src="./assets/index-C-ZlptLb.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-BsNqUhVF.css">
+    <script type="module" crossorigin src="./assets/index-DPxw72jS.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-CkMBMeQk.css">
   </head>
   <body>
     <header class="page-header">
@@ -30,6 +30,9 @@
             <p class="header-tagline" data-i18n="Club stats, a live score tracker, and your game log">Club stats, a live score tracker, and your game log</p>
           </div>
           <div class="header-pickers">
+            <button type="button" id="search-button" class="search-button" aria-controls="site-search" aria-label="Search the site" data-i18n-label="Search the site">
+              <span aria-hidden="true">🔍</span> <span data-i18n="Search">Search</span>
+            </button>
             <label class="theme-picker">
               <span class="visually-hidden" data-i18n="Language">Language</span>
               <select id="language-select"></select>
@@ -44,6 +47,7 @@
             </label>
           </div>
         </div>
+        <div id="site-search" class="site-search" hidden></div>
         <nav class="tabs" role="tablist" aria-label="Sections" data-i18n-label="Sections">
           <button type="button" role="tab" data-tab="club" aria-controls="club-panel" data-i18n="Club stats">Club stats</button>
           <button type="button" role="tab" data-tab="games" aria-controls="games-panel" data-i18n="My games">My games</button>
